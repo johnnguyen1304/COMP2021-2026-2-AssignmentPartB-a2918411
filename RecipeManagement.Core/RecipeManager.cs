@@ -43,8 +43,17 @@ public sealed class RecipeManager : IRecipeManager
     public int PendingInstructionCount => 0;
     public int RemovedRecipeCount => 0;
 
-    public bool AddRecipe(Recipe recipe) =>
-        throw new NotImplementedException("Part A: implement AddRecipe.");
+    public bool AddRecipe(Recipe recipe) 
+    {
+        ArgumentNullException.ThrowIfNull(recipe);
+
+        if (recipe.Id <= 0 || string.IsNullOrWhiteSpace(recipe.Title))
+        {
+            return false;
+        }
+
+        return _recipes.TryAdd(recipe.Id, recipe);
+    }
 
     public Recipe? FindRecipe(int recipeId)
         {
