@@ -39,6 +39,57 @@ public sealed class RecipeManagerTests
         Assert.Equal(new[] { 20 }, manager.GetCookingPlan());
     }
 
+    [Fact]
+    public void Constructor_RejectsNullCollection()
+    {
+        Assert.Throws<System.ArgumentNullException>(() => new RecipeManager(null!));
+    }
+
+    [Theory]
+    [InlineData(0, "Recipe A")]
+    [InlineData(-1, "Recipe A")]
+    [InlineData(10, "")]
+    [InlineData(10, " ")]
+    [InlineData(10, null)]
+    public void Constructor_RejectsInvalidRecipe(int id, string? title)
+    {
+        var recipes = new[]
+        {
+            new Recipe { Id = id, Title = title! }
+        };
+
+        Assert.Throws<System.ArgumentException>( () => new RecipeManager(recipes));
+    }
+
+    [Fact]
+    public void Constructor_RejectsDuplicateIds()
+    {
+        var recipes = new[]
+        {
+            new Recipe { Id = 10, Title = "Recipe A"},
+            new Recipe { Id = 10, Title = "Recipe B"}
+        };
+
+        Assert.Throws<System.ArgumentException>( () => new RecipeManager(recipes));
+    }
+
+    [Fact]
+    public void Constructor_AcceptsEmptyCollection()
+    {
+        var manager = new RecipeManager(System.Array.Empty<Recipe>());
+
+        Assert.Equal(0, manager.RecipeCount);
+        Assert.Null(manager.FindRecipe(10));
+    }
+
+    [Fact]
+    public void FindRecipe_ReturnsNullForMissingId()
+    {
+        var manager = CreateManager();
+
+        Assert.Null(manager.FindRecipe(999));
+    }
+
     private static RecipeManager CreateManager()
     {
         return new RecipeManager(new[]

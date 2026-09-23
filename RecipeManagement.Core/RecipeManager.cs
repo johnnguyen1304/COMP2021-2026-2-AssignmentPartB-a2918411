@@ -11,14 +11,33 @@ namespace RecipeManagement.Core;
 public sealed class RecipeManager : IRecipeManager
 {
     // TODO Part A: add your private collection fields here.
+    private readonly Dictionary<int, Recipe> _recipes = new();
 
     public RecipeManager(IEnumerable<Recipe> recipes)
     {
         // TODO Part A: validate recipes and build Dictionary<int, Recipe>.
-        _ = recipes;
+        ArgumentNullException.ThrowIfNull(recipes);
+
+        foreach(Recipe recipe in recipes)
+        {
+            if (recipe is null)
+            {
+                throw new ArgumentException("The recipe collection cannot contain null entries.", nameof(recipes));
+            }
+        
+            if (recipe.Id <= 0 || string.IsNullOrWhiteSpace(recipe.Title))
+            {
+                throw new ArgumentException("Recipe must have a positive ID and a non-blank title.", nameof(recipes));
+            }
+
+            if (!_recipes.TryAdd(recipe.Id, recipe))
+            {
+                throw new ArgumentException("Recipe IDs must be unique.", nameof(recipes));
+            }
+        }
     }
 
-    public int RecipeCount => 0;
+    public int RecipeCount => _recipes.Count;
     public int ShoppingItemCount => 0;
     public int CookingPlanCount => 0;
     public int PendingInstructionCount => 0;
@@ -27,8 +46,11 @@ public sealed class RecipeManager : IRecipeManager
     public bool AddRecipe(Recipe recipe) =>
         throw new NotImplementedException("Part A: implement AddRecipe.");
 
-    public Recipe? FindRecipe(int recipeId) =>
-        throw new NotImplementedException("Part A: implement FindRecipe.");
+    public Recipe? FindRecipe(int recipeId)
+        {
+            return _recipes.TryGetValue(recipeId, out Recipe? recipe)
+                ? recipe : null;
+        }
 
     public bool RemoveRecipe(int recipeId) =>
         throw new NotImplementedException("Part A: implement RemoveRecipe.");
