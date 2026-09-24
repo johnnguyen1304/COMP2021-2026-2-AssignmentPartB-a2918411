@@ -145,6 +145,56 @@ public sealed class RecipeManagerTests
         Assert.Null(manager.FindRecipe(id));
     }
 
+    [Fact]
+    public void RemoveRecipe_RemovesExistingRecipe()
+    {
+        var manager = CreateManager();
+
+        bool result = manager.RemoveRecipe(10);
+
+        Assert.True(result);
+        Assert.Equal(1, manager.RecipeCount);
+        Assert.Null(manager.FindRecipe(10));
+        Assert.Equal("Recipe B", manager.FindRecipe(20)?.Title);
+    }
+    
+    [Fact]
+    public void RemoveRecipe_ReturnsFalseForMissingId()
+    {
+        var manager = CreateManager();
+
+        bool result = manager.RemoveRecipe(999);
+
+        Assert.False(result);
+        Assert.Equal(2, manager.RecipeCount);
+    }
+
+    [Fact]
+    public void RemoveRecipe_ReturnsFalseWhenAlreadyRemoved()
+    {
+        var manager = CreateManager();
+
+        Assert.True(manager.RemoveRecipe(10));
+        Assert.False(manager.RemoveRecipe(10));
+        Assert.Equal(1, manager.RecipeCount);
+    }
+
+    [Fact]
+    public void AddRecipe_CanReuseRemovedId()
+    {
+        var manager = CreateManager();
+        var replacement = new Recipe
+        {
+            Id = 10,
+            Title = "Replacement recipe"
+        };
+
+        Assert.True(manager.RemoveRecipe(10));
+        Assert.True(manager.AddRecipe(replacement));
+        Assert.Equal(2, manager.RecipeCount);
+        Assert.Same(replacement, manager.FindRecipe(10));
+    }
+
     private static RecipeManager CreateManager()
     {
         return new RecipeManager(new[]

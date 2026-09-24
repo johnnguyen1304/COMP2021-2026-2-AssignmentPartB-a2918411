@@ -37,9 +37,11 @@ public sealed class RecipeManager : IRecipeManager
         }
     }
 
+    private readonly LinkedList<int> _cookingPlan = new();
+
     public int RecipeCount => _recipes.Count;
     public int ShoppingItemCount => 0;
-    public int CookingPlanCount => 0;
+    public int CookingPlanCount => _cookingPlan.Count;
     public int PendingInstructionCount => 0;
     public int RemovedRecipeCount => 0;
 
@@ -61,8 +63,15 @@ public sealed class RecipeManager : IRecipeManager
                 ? recipe : null;
         }
 
-    public bool RemoveRecipe(int recipeId) =>
-        throw new NotImplementedException("Part A: implement RemoveRecipe.");
+    public bool RemoveRecipe(int recipeId)
+    {
+        if (_cookingPlan.Contains(recipeId))
+        {
+            return false;
+        }
+
+        return _recipes.Remove(recipeId);
+    }
 
     public int AddIngredientsToShoppingList(int recipeId) =>
         throw new NotImplementedException("Part A: implement AddIngredientsToShoppingList.");
