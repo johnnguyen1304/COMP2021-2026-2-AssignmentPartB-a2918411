@@ -37,4 +37,4 @@ Until you implement `RecipeManager`, menu options print a **Not implemented** me
 
 ## AI acknowledgement
 
-Include the required AI acknowledgement statement in your submission as described in the assignment specification.
+I used ChatGPT/Codex to help me understand what `?` means in C#. I learned that `Recipe?` means the result can be a recipe or null, while `condition ? value : null` chooses what to return based on the condition. This helped me understand how `FindRecipe` returns a recipe when the ID exists and null when it does not.
