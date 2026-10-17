@@ -556,6 +556,70 @@ public sealed class RecipeManagerTests
         Assert.Equal(2, manager.PendingInstructionCount);
         Assert.Equal("First step", manager.PeekNextInstruction());
     }
+    [Theory]
+    [InlineData("soup")]
+    [InlineData("SOUP")]
+    [InlineData("SoUp")]
+    public void SearchByTitle_FindsPartialMatchesIgnoringCase(string searchText)
+    {
+        var manager = new RecipeManager(new[]
+        {
+            new Recipe { Id = 1, Title = "Tomato Soup" },
+            new Recipe { Id = 2, Title = "Chicken SOUP" },
+            new Recipe { Id = 3, Title = "Apple Pie" }
+        });
+
+        var results = manager.SearchByTitle(searchText);
+
+        Assert.Equal(2, results.Count);
+        Assert.Contains(results, recipe => recipe.Id == 1);
+        Assert.Contains(results, recipe => recipe.Id == 2);
+    }
+    [Fact]
+    public void SearchByTitle_NoMatchReturnsEmpty()
+    {
+        var manager = CreateManager();
+
+        var results = manager.SearchByTitle("pizza");
+
+        Assert.Empty(results);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void SearchByTitle_BlankSearchReturnsAllRecipes(string searchText)
+    {
+        var manager = CreateManager();
+
+        var results = manager.SearchByTitle(searchText);
+
+        Assert.Equal(2, results.Count);
+        Assert.Contains(results, recipe => recipe.Id == 10);
+        Assert.Contains(results, recipe => recipe.Id == 20);
+    }
+
+    [Fact]
+    public void SearchByTitle_EmptyCatalogueReturnsEmpty()
+    {
+        var manager = new RecipeManager(System.Array.Empty<Recipe>());
+
+        Assert.Empty(manager.SearchByTitle("soup"));
+    }
+
+    [Fact]
+    public void SearchByTitle_ReturnsRecipeOnceWhenWordAppearsTwice()
+    {
+        var manager = new RecipeManager(new[]
+        {
+            new Recipe { Id = 1, Title = "Soup with Soup Dumplings" }
+        });
+
+        var results = manager.SearchByTitle("soup");
+
+        Assert.Single(results);
+        Assert.Equal(1, results[0].Id);
+    }
 
     private static RecipeManager CreateManager()
     {
