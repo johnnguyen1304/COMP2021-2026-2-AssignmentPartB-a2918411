@@ -621,6 +621,124 @@ public sealed class RecipeManagerTests
         Assert.Equal(1, results[0].Id);
     }
 
+    [Theory]
+    [InlineData("tomato")]
+    [InlineData("TOMATO")]
+    [InlineData("ToMaTo")]
+    public void SearchByIngredient_FindsPartialMatchesIgnoringCase(
+        string searchText)
+    {
+        var manager = new RecipeManager(new[]
+        {
+            new Recipe
+            {
+                Id = 1,
+                Title = "Soup",
+                Ingredients = new() { "2 cups water", "3 chopped tomatoes" }
+            },
+            new Recipe
+            {
+                Id = 2,
+                Title = "Pasta",
+                Ingredients = new() { "1 tbsp TOMATO paste", "200 g pasta" }
+            },
+            new Recipe
+            {
+                Id = 3,
+                Title = "Apple Pie",
+                Ingredients = new() { "2 apples", "100 g flour" }
+            }
+        });
+
+        var results = manager.SearchByIngredient(searchText);
+
+        Assert.Equal(2, results.Count);
+        Assert.Contains(results, recipe => recipe.Id == 1);
+        Assert.Contains(results, recipe => recipe.Id == 2);
+    }
+
+    [Fact]
+    public void SearchByIngredient_ReturnsRecipeOnceForMultipleMatches()
+    {
+        var manager = new RecipeManager(new[]
+        {
+            new Recipe
+            {
+                Id = 1,
+                Title = "Tomato Soup",
+                Ingredients = new()
+                {
+                    "3 tomatoes",
+                    "1 tbsp tomato paste",
+                    "200 ml tomato juice"
+                }
+            }
+        });
+
+        var results = manager.SearchByIngredient("tomato");
+
+        Assert.Single(results);
+        Assert.Equal(1, results[0].Id);
+    }
+
+    [Fact]
+    public void SearchByIngredient_DoesNotMatchTitleAlone()
+    {
+        var manager = new RecipeManager(new[]
+        {
+            new Recipe
+            {
+                Id = 1,
+                Title = "Apple Pie",
+                Ingredients = new() { "100 g flour", "50 g sugar" }
+            }
+        });
+
+        Assert.Empty(manager.SearchByIngredient("apple"));
+    }
+
+    [Fact]
+    public void SearchByIngredient_NoMatchReturnsEmpty()
+    {
+        var manager = CreateManager();
+
+        Assert.Empty(manager.SearchByIngredient("chicken"));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void SearchByIngredient_BlankSearchReturnsAllRecipes(
+        string searchText)
+    {
+        var manager = CreateManager();
+
+        var results = manager.SearchByIngredient(searchText);
+
+        Assert.Equal(2, results.Count);
+        Assert.Contains(results, recipe => recipe.Id == 10);
+        Assert.Contains(results, recipe => recipe.Id == 20);
+    }
+
+    [Fact]
+    public void SearchByIngredient_EmptyCatalogueReturnsEmpty()
+    {
+        var manager = new RecipeManager(System.Array.Empty<Recipe>());
+
+        Assert.Empty(manager.SearchByIngredient("apple"));
+    }
+
+    [Fact]
+    public void SearchByIngredient_RecipeWithoutIngredientsDoesNotMatch()
+    {
+        var manager = new RecipeManager(new[]
+        {
+            new Recipe { Id = 1, Title = "Recipe without ingredients" }
+        });
+
+        Assert.Empty(manager.SearchByIngredient("apple"));
+    }
+
     private static RecipeManager CreateManager()
     {
         return new RecipeManager(new[]
