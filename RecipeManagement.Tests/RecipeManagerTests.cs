@@ -739,6 +739,148 @@ public sealed class RecipeManagerTests
         Assert.Empty(manager.SearchByIngredient("apple"));
     }
 
+    [Fact]
+    public void GetHighestProteinRecipes_ReturnsRequestedNumberInDescendingOrder()
+    {
+        var manager = new RecipeManager(new[]
+        {
+            new Recipe
+            {
+                Id = 1,
+                Title = "Low protein",
+                Nutrition = new NutritionInfo { ProteinG = 5 }
+            },
+            new Recipe
+            {
+                Id = 2,
+                Title = "High protein",
+                Nutrition = new NutritionInfo { ProteinG = 30 }
+            },
+            new Recipe
+            {
+                Id = 3,
+                Title = "Medium protein",
+                Nutrition = new NutritionInfo { ProteinG = 15 }
+            }
+        });
+
+        var results = manager.GetHighestProteinRecipes(2);
+
+        Assert.Equal(2, results.Count);
+        Assert.Equal(2, results[0].Id);
+        Assert.Equal(3, results[1].Id);
+    }
+
+    [Fact]
+    public void GetHighestProteinRecipes_ExcludesMissingNutritionAndProtein()
+    {
+        var manager = new RecipeManager(new[]
+        {
+            new Recipe
+            {
+                Id = 1,
+                Title = "Missing nutrition",
+                Nutrition = null
+            },
+            new Recipe
+            {
+                Id = 2,
+                Title = "Missing protein",
+                Nutrition = new NutritionInfo { ProteinG = null }
+            },
+            new Recipe
+            {
+                Id = 3,
+                Title = "Known protein",
+                Nutrition = new NutritionInfo { ProteinG = 12 }
+            }
+        });
+
+        var results = manager.GetHighestProteinRecipes(10);
+
+        Assert.Single(results);
+        Assert.Equal(3, results[0].Id);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void GetHighestProteinRecipes_NonPositiveCountReturnsEmpty(int count)
+    {
+        var manager = new RecipeManager(new[]
+        {
+            new Recipe
+            {
+                Id = 1,
+                Title = "Known protein",
+                Nutrition = new NutritionInfo { ProteinG = 20 }
+            }
+        });
+
+        Assert.Empty(manager.GetHighestProteinRecipes(count));
+    }
+
+    [Fact]
+    public void GetHighestProteinRecipes_LargeCountReturnsAllAvailableInOrder()
+    {
+        var manager = new RecipeManager(new[]
+        {
+            new Recipe
+            {
+                Id = 1,
+                Title = "Lower protein",
+                Nutrition = new NutritionInfo { ProteinG = 8 }
+            },
+            new Recipe
+            {
+                Id = 2,
+                Title = "Higher protein",
+                Nutrition = new NutritionInfo { ProteinG = 25 }
+            }
+        });
+
+        var results = manager.GetHighestProteinRecipes(10);
+
+        Assert.Equal(2, results.Count);
+        Assert.Equal(2, results[0].Id);
+        Assert.Equal(1, results[1].Id);
+    }
+
+    [Fact]
+    public void GetHighestProteinRecipes_ZeroProteinIsIncluded()
+    {
+        var manager = new RecipeManager(new[]
+        {
+            new Recipe
+            {
+                Id = 1,
+                Title = "Zero protein",
+                Nutrition = new NutritionInfo { ProteinG = 0 }
+            }
+        });
+
+        var results = manager.GetHighestProteinRecipes(1);
+
+        Assert.Single(results);
+        Assert.Equal(1, results[0].Id);
+    }
+
+    [Fact]
+    public void GetHighestProteinRecipes_AllProteinMissingReturnsEmpty()
+    {
+        var manager = CreateManager();
+
+        Assert.Empty(manager.GetHighestProteinRecipes(5));
+    }
+
+    [Fact]
+    public void GetHighestProteinRecipes_EmptyCatalogueReturnsEmpty()
+    {
+        var manager = new RecipeManager(System.Array.Empty<Recipe>());
+
+        Assert.Empty(manager.GetHighestProteinRecipes(5));
+    }
+
     private static RecipeManager CreateManager()
     {
         return new RecipeManager(new[]
