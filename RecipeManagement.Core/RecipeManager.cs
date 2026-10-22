@@ -17,6 +17,7 @@ public sealed class RecipeManager : IRecipeManager
     private readonly LinkedList<int> _cookingPlan = new();
     private readonly Stack<int> _removedRecipes = new();
     private readonly Queue<string> _instructions = new();
+    private readonly HashSet<int> _savedRecipes = new();
 
     public RecipeManager(IEnumerable<Recipe> recipes)
     {
@@ -215,15 +216,28 @@ public sealed class RecipeManager : IRecipeManager
         .Take(count).ToList();
     }
 
-    public bool AddSavedRecipe(int recipeId) =>
-        throw new NotImplementedException("Part B: implement AddSavedRecipe.");
+    public bool AddSavedRecipe(int recipeId)
+    {
+        if(!_recipes.ContainsKey(recipeId))
+        {
+            return false;
+        }
 
-    public bool RemoveSavedRecipe(int recipeId) =>
-        throw new NotImplementedException("Part B: implement RemoveSavedRecipe.");
+        return _savedRecipes.Add(recipeId);
+    }
 
-    public bool IsRecipeSaved(int recipeId) =>
-        throw new NotImplementedException("Part B: implement IsRecipeSaved.");
+    public bool RemoveSavedRecipe(int recipeId)
+    {
+        return _savedRecipes.Remove(recipeId);
+    }
 
-    public IReadOnlyList<int> GetSavedRecipes() =>
-        throw new NotImplementedException("Part B: implement GetSavedRecipes.");
+    public bool IsRecipeSaved(int recipeId)
+    {
+        return _savedRecipes.Contains(recipeId);
+    }
+
+    public IReadOnlyList<int> GetSavedRecipes()
+    {
+        return _savedRecipes.ToList();
+    }
 }
