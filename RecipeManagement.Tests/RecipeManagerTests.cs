@@ -999,6 +999,65 @@ public sealed class RecipeManagerTests
         Assert.Single(manager.GetSavedRecipes());
     }
 
+    [Fact]
+    public void PartBWorkflow_SearchSavePlanCookAndUnsaveRecipe()
+    {
+        IRecipeManager manager = new RecipeManager(new[]
+        {
+            new Recipe
+            {
+                Id = 1,
+                Title = "Chicken Soup",
+                Ingredients = new() { "200 g chicken", "500 ml water" },
+                Instructions = new() { "Combine ingredients", "Simmer" },
+                Nutrition = new NutritionInfo { ProteinG = 30 }
+            },
+            new Recipe
+            {
+                Id = 2,
+                Title = "Vegetable Soup",
+                Ingredients = new() { "2 carrots", "500 ml water" },
+                Instructions = new() { "Chop vegetables", "Simmer" },
+                Nutrition = new NutritionInfo { ProteinG = 5 }
+            }
+        });
+
+        // Find a recipe through the Part B searches and report.
+        var titleResults = manager.SearchByTitle("CHICKEN");
+        var selectedRecipe = Assert.Single(titleResults);
+
+        Assert.Equal(1, selectedRecipe.Id);
+
+        var ingredientResults = manager.SearchByIngredient("chicken");
+        Assert.Equal(selectedRecipe.Id, Assert.Single(ingredientResults).Id);
+
+        var proteinResults = manager.GetHighestProteinRecipes(1);
+        Assert.Equal(selectedRecipe.Id, Assert.Single(proteinResults).Id);
+
+        // Save the selected recipe.
+        Assert.True(manager.AddSavedRecipe(selectedRecipe.Id));
+        Assert.True(manager.IsRecipeSaved(selectedRecipe.Id));
+        Assert.Contains(selectedRecipe.Id, manager.GetSavedRecipes());
+
+        // Use the same recipe in the existing Part A workflow.
+        Assert.True(manager.AddRecipeToCookingPlan(selectedRecipe.Id));
+        Assert.Equal(
+            new[] { selectedRecipe.Id },
+            manager.GetCookingPlan());
+
+        Assert.True(manager.StartCooking(selectedRecipe.Id));
+        Assert.Equal("Combine ingredients", manager.CompleteNextInstruction());
+        Assert.Equal("Simmer", manager.CompleteNextInstruction());
+        Assert.Null(manager.CompleteNextInstruction());
+
+        // Removing a saved entry leaves the catalogue and plan intact.
+        Assert.True(manager.RemoveSavedRecipe(selectedRecipe.Id));
+        Assert.False(manager.IsRecipeSaved(selectedRecipe.Id));
+        Assert.Empty(manager.GetSavedRecipes());
+        Assert.NotNull(manager.FindRecipe(selectedRecipe.Id));
+        Assert.Contains(selectedRecipe.Id, manager.GetCookingPlan());
+    }
+
     private static RecipeManager CreateManager()
     {
         return new RecipeManager(new[]
